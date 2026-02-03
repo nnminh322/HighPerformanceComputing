@@ -40,7 +40,7 @@
 
 **Vấn đề gốc:** Trong phiên bản tuần tự, toàn bộ 4000 mẫu dữ liệu được xử lý trên một process duy nhất. Mỗi iteration phải tính forward pass và backpropagation cho tất cả samples → tốn thời gian.
 
-**Giải pháp:** Áp dụng **Data Parallelism** - chia dữ liệu training cho nhiều processes xử lý đồng thời.
+**Giải pháp:** Áp dụng **Data Parallelism** - chia dữ liệu training cho nhiều processes xử lý đồng thời. 
 
 **Những gì đã được song song hóa:**
 
@@ -139,14 +139,37 @@
 3. **Overall:** C++ parallel nhanh hơn Python sequential ~27x
 4. **Accuracy:** Tương đương giữa các phiên bản (~91-94%)
 
-### Bottlenecks
+### Bottlenecks & Đánh giá khả năng tối ưu MPI
 
-- Matrix operations trong `matrix_utils.h` chưa tối ưu (có thể dùng BLAS/LAPACK)
-- MPI communication overhead với small batch sizes
-- Memory allocation/deallocation trong mỗi iteration
+**Thử nghiệm tối ưu: Parallel Evaluation**
 
-### Potential Improvements
+Ý tưởng: Thay vì chỉ process 0 predict toàn bộ train/test set, ta phân tán việc evaluation:
+- Scatter data cho tất cả processes
+- Mỗi process predict phần của mình  
+- `MPI_Reduce` để tổng hợp số predictions đúng về root
 
-1. Sử dụng BLAS (OpenBLAS, Intel MKL) cho matrix multiplication
-2. Overlap computation và communication
-3. GPU acceleration (CUDA/OpenCL)
+File: `src/parallel_optimized.cpp`
+
+**Kết quả so sánh:**
+
+| Version | Training Time | Eval Time | Total |
+|---------|---------------|-----------|-------|
+| Parallel (gốc) | 5.56s | ~0.02s | 5.58s |
+| Parallel (optimized) | 5.58s | 0.014s | 5.59s |
+
+**Kết luận:** Với dataset nhỏ (4000 train, 1000 test), việc tối ưu evaluation **không mang lại cải thiện đáng kể** vì:
+- Evaluation time chỉ chiếm ~0.3% tổng thời gian
+- Overhead của MPI communication (scatter/reduce) có thể lớn hơn benefit
+
+**Đánh giá tổng thể:**
+
+Code hiện tại **đã được tối ưu hợp lý** với các hàm MPI cơ bản:
+
+1. ✅ `MPI_Scatterv` - Chia dữ liệu không đều (xử lý trường hợp samples không chia hết)
+2. ✅ `MPI_Allreduce` - Tối ưu hơn `MPI_Reduce` + `MPI_Bcast` (1 call thay vì 2)
+3. ✅ `MPI_Bcast` - Broadcast weights chỉ 1 lần đầu (không lặp lại mỗi iteration)
+
+**Không cần tối ưu thêm vì:**
+- Dataset nhỏ (4000 samples) → communication overhead không đáng kể
+- Mạng neural network đơn giản (3 layers) → không cần model parallelism
+- Speedup đạt ~3.4x với 4 processes là hợp lý (gần linear scaling)
