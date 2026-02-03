@@ -107,13 +107,6 @@
 └────────────────────────────────────────────────────────────────┘
 ```
 
-### MPI Operations Used
-
-| Operation | Purpose |
-|-----------|---------|
-| `MPI_Bcast` | Broadcast weights từ root đến tất cả processes |
-| `MPI_Scatterv` | Chia dữ liệu training cho các processes |
-| `MPI_Allreduce` | Tổng hợp gradients từ tất cả processes |
 
 ### Configuration
 
