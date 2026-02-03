@@ -27,10 +27,10 @@ project_cpp/
 
 ## Setup
 
-### 1. Install MPI (conda)
+### 1. Install MPI (conda) (remember create env before running)
 
 ```bash
-conda activate master
+conda activate env 
 conda install -c conda-forge openmpi openmpi-mpicc
 ```
 
