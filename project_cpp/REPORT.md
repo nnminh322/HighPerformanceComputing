@@ -154,15 +154,3 @@ File: `src/parallel_optimized.cpp`
 - Evaluation time chỉ chiếm ~0.3% tổng thời gian
 - Overhead của MPI communication (scatter/reduce) có thể lớn hơn benefit
 
-**Đánh giá tổng thể:**
-
-Code hiện tại **đã được tối ưu hợp lý** với các hàm MPI cơ bản:
-
-1. ✅ `MPI_Scatterv` - Chia dữ liệu không đều (xử lý trường hợp samples không chia hết)
-2. ✅ `MPI_Allreduce` - Tối ưu hơn `MPI_Reduce` + `MPI_Bcast` (1 call thay vì 2)
-3. ✅ `MPI_Bcast` - Broadcast weights chỉ 1 lần đầu (không lặp lại mỗi iteration)
-
-**Không cần tối ưu thêm vì:**
-- Dataset nhỏ (4000 samples) → communication overhead không đáng kể
-- Mạng neural network đơn giản (3 layers) → không cần model parallelism
-- Speedup đạt ~3.4x với 4 processes là hợp lý (gần linear scaling)
