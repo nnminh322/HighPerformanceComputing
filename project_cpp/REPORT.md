@@ -118,19 +118,43 @@
 
 ## 3. Performance Results
 
-| Version | Language | Train Acc | Test Acc | Time | Speedup |
-|---------|----------|-----------|----------|------|---------|
+### System Info
+- **CPU:** Apple Silicon, 10 cores / 10 threads
+- **Max threads:** 10
+
+### C++ Scaling Results
+
+| Version | Procs | Samples/Proc | Train Acc | Test Acc | Training Time | Speedup (vs Seq) |
+|---------|-------|-------------|-----------|----------|--------------|-------------------|
+| Sequential | 1 | 4000 | 93.60% | 91.30% | 19.58s | 1.0x |
+| Parallel | 2 | 2000 | 93.60% | 91.30% | 10.74s | 1.82x |
+| **Parallel** | **4** | **1000** | **93.60%** | **91.30%** | **5.99s** | **3.27x** |
+| Parallel | 8 | 500 | 93.60% | 91.30% | 5.18s | 3.78x |
+
+### Cross-Language Comparison
+
+| Version | Language | Train Acc | Test Acc | Time | Speedup (vs Python Seq) |
+|---------|----------|-----------|----------|------|-------------------------|
 | Sequential | Python | 94.05% | 91.90% | 156.45s | 1.0x |
 | Parallel (4 proc) | Python | 94.20% | 92.10% | ~40s | ~4x |
-| Sequential | C++ | 93.60% | 91.30% | 19.70s | 7.9x |
-| **Parallel (4 proc)** | **C++** | **93.60%** | **91.30%** | **5.82s** | **26.9x** |
+| Sequential | C++ | 93.60% | 91.30% | 19.58s | 8.0x |
+| Parallel (2 proc) | C++ | 93.60% | 91.30% | 10.74s | 14.6x |
+| **Parallel (4 proc)** | **C++** | **93.60%** | **91.30%** | **5.99s** | **26.1x** |
+| Parallel (8 proc) | C++ | 93.60% | 91.30% | 5.18s | 30.2x |
 
 ### Key Observations
 
 1. **C++ vs Python:** C++ sequential nhanh hơn Python sequential ~8x
-2. **Parallel speedup:** C++ parallel (4 proc) đạt ~3.4x so với C++ sequential
-3. **Overall:** C++ parallel nhanh hơn Python sequential ~27x
-4. **Accuracy:** Tương đương giữa các phiên bản (~91-94%)
+2. **Parallel scaling (C++):**
+   - 2 procs: 1.82x speedup (efficiency 91%)
+   - 4 procs: 3.27x speedup (efficiency 82%)
+   - 8 procs: 3.78x speedup (efficiency 47%)
+3. **Diminishing returns:** Từ 4→8 procs chỉ cải thiện thêm ~15% (5.99s→5.18s), do:
+   - Dataset nhỏ (4000 samples): mỗi process chỉ xử lý 500 samples với 8 procs
+   - MPI communication overhead tăng khi số processes tăng
+   - Amdahl's Law: phần sequential (AllReduce, weight update) giới hạn speedup
+4. **Sweet spot:** 4 processes là lựa chọn tối ưu cho dataset này (cân bằng speedup vs resource)
+5. **Accuracy:** Tương đương giữa tất cả các phiên bản (~93.60% train, ~91.30% test)
 
 ### Bottlenecks & Đánh giá khả năng tối ưu MPI
 

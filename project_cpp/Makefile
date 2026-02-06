@@ -31,8 +31,26 @@ $(PARALLEL_OPT): $(SRC_DIR)/parallel_optimized.cpp $(SRC_DIR)/matrix_utils.h
 run_seq: $(SEQUENTIAL)
 	./$(SEQUENTIAL)
 
+run_par_2: $(PARALLEL)
+	mpirun -np 2 ./$(PARALLEL)
+
+run_par_4: $(PARALLEL)
+	mpirun -np 4 ./$(PARALLEL)
+
+run_par_8: $(PARALLEL)
+	mpirun -np 8 ./$(PARALLEL)
+
 run_par: $(PARALLEL)
 	mpirun -np 4 ./$(PARALLEL)
+
+run_opt_2: $(PARALLEL_OPT)
+	mpirun -np 2 ./$(PARALLEL_OPT)
+
+run_opt_4: $(PARALLEL_OPT)
+	mpirun -np 4 ./$(PARALLEL_OPT)
+
+run_opt_8: $(PARALLEL_OPT)
+	mpirun -np 8 ./$(PARALLEL_OPT)
 
 run_opt: $(PARALLEL_OPT)
 	mpirun -np 4 ./$(PARALLEL_OPT)

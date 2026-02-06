@@ -55,16 +55,42 @@ make run_seq
 ./build/sequential
 ```
 
+**Parallel (2 processes):**
+```bash
+make run_par_2
+# or
+mpirun -np 2 ./build/parallel
+```
+
 **Parallel (4 processes):**
 ```bash
-make run_par
+make run_par_4
 # or
 mpirun -np 4 ./build/parallel
 ```
 
-## Results
+**Parallel (8 processes):**
+```bash
+make run_par_8
+# or
+mpirun -np 8 ./build/parallel
+```
 
-| Version | Train Acc | Test Acc | Time |
-|---------|-----------|----------|------|
-| C++ Sequential | 93.60% | 91.30% | 19.70s |
-| C++ Parallel (4 proc) | 93.60% | 91.30% | 5.82s |
+## Performance Benchmark
+
+**CPU Info:**
+- 10 cores / 10 threads (Apple Silicon)
+- 4000 training samples, 1000 test samples
+- 300 iterations with learning rate 1.5
+
+| Version | Processes | Training Time | Speedup | Efficiency |
+|---------|-----------|---------------|---------|-----------|
+| Sequential | 1 | 19.58s | 1.0x | - |
+| Parallel | 2 | 10.74s | 1.82x | 91% |
+| Parallel | 4 | 5.99s | 3.27x | 82% |
+| Parallel | 8 | 5.18s | 3.78x | 47% |
+
+**Key Results:**
+- Accuracy consistent across all versions: Train 93.60%, Test 91.30%
+- Sweet spot: 4 processes (best balance of speedup vs efficiency)
+- Diminishing returns after 4 processes due to overhead and small dataset per process
